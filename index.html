@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Money App</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
+
+        input, select {
+            display: block;
+            margin: 10px auto;
+            padding: 8px;
+            width: 90%;
+        }
+
+        button {
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        pre {
+            text-align: left;
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>💰 Money Transfer App</h1>
+<div class="card">
+    <h3>📊 Dashboard</h3>
+    <p>Total Users: <span id="totalUsers">0</span></p>
+    <p>Total Transactions: <span id="totalTransactions">0</span></p>
+    <p>Total Transferred: $<span id="totalTransferred">0</span></p>
+    <p>Total Balance: $<span id="totalBalance">0</span></p>
+</div>
+
+<div class="card">
+    <h3>Add User</h3>
+    <input id="name" placeholder="Name">
+    <input id="email" placeholder="Email">
+    <input id="balance" placeholder="Balance">
+    <button onclick="addUser()">Add</button>
+</div>
+
+<div class="card">
+    <h3>Send Money</h3>
+    <select id="sender"></select>
+    <select id="receiver"></select>
+    <input id="amount" placeholder="Amount">
+    <button onclick="sendMoney()">Send</button>
+</div>
+
+<div class="card">
+    <h3>Users</h3>
+    <button onclick="loadUsers()">Load</button>
+    <pre id="users"></pre>
+</div>
+<div class="card">
+    <h3>Transaction History</h3>
+    <button onclick="loadTransactions()">Load Transactions</button>
+    <pre id="transactions"></pre>
+</div>
+
+<script>
+const API = "http://127.0.0.1:5000";
+
+// Add user\|\\\s
+ function addUser() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const balance = document.getElementById("balance").value;
+
+    fetch("http://127.0.0.1:5000/add_user", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            email: email,
+            balance: parseFloat(balance)
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("User added!");
+        location.reload(); // simple refresh
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error adding user");
+    });
+}
+// Load users in dropdown
+function loadDropdowns() {
+    fetch(API + "/users")
+    .then(res => res.json())
+    .then(data => {
+        sender.innerHTML = "";
+        receiver.innerHTML = "";
+
+        data.forEach(user => {
+            let option1 = document.createElement("option");
+            option1.value = user.id;
+            option1.text = user.name + " ($" + user.balance + ")";
+
+            let option2 = document.createElement("option");
+            option2.value = user.id;
+            option2.text = user.name + " ($" + user.balance + ")";
+
+            sender.appendChild(option1);
+            receiver.appendChild(option2);
+        });
+    });
+}
+
+// Send money
+function sendMoney() {
+    fetch(API + "/send_money", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            sender_id: parseInt(sender.value),
+            receiver_id: parseInt(receiver.value),
+            amount: parseFloat(amount.value)
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(JSON.stringify(data));
+        loadUsers();
+        loadDropdowns();
+    });
+}
+
+// Load users list
+function loadUsers() {
+    fetch(API + "/users")
+    .then(res => res.json())
+    .then(data => {
+        users.innerText = JSON.stringify(data, null, 2);
+    });
+}
+
+function loadDashboard() {
+    fetch(API + "/dashboard")
+    .then(res => res.json())
+    .then(data => {
+        totalUsers.innerText = data.total_users;
+        totalTransactions.innerText = data.total_transactions;
+        totalTransferred.innerText = data.total_transferred;
+        totalBalance.innerText = data.total_balance;
+    });
+}
+
+function loadTransactions() {
+    fetch(API + "/transactions")
+    .then(res => res.json())
+    .then(data => {
+        transactions.innerText = JSON.stringify(data, null, 2);
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Failed to load transactions");
+    });
+}
+
+function loadDashboard() {
+    fetch(API + "/dashboard")
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("totalUsers").innerText = data.total_users;
+        document.getElementById("totalTransactions").innerText = data.total_transactions;
+        document.getElementById("totalTransferred").innerText = data.total_transferred;
+        document.getElementById("totalBalance").innerText = data.total_balance;
+    });
+}
+
+// Auto load on start
+loadDropdowns();
+loadDashboard();
+</script>
+
+</body>
+</html>
