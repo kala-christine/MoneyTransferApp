@@ -89,7 +89,7 @@ const API = "https://moneytransferapp-vead.onrender.com";
     const email = document.getElementById("email").value;
     const balance = document.getElementById("balance").value;
 
-    fetch("http://127.0.0.1:5000/add_user", {
+    fetch(API + "/add_user", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
